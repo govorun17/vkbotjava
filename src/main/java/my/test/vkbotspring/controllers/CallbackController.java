@@ -2,22 +2,15 @@ package my.test.vkbotspring.controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import my.test.vkbotspring.controllers.vkApiResponseBuilders.VkApiResponseBuilder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
 public class CallbackController {
 
     private final VkApiResponseBuilder vkApiResponseBuilder = new VkApiResponseBuilder();
-
 
     @PostMapping(value = "/callback", consumes = {"application/json"})
     @ResponseBody
@@ -38,4 +31,8 @@ public class CallbackController {
         return "OK!";
     }
 
+    @GetMapping("/testconnection")
+    public String test() {
+        return "Get OK!!!";
+    }
 }
