@@ -19,7 +19,7 @@ public class VkApiResponseBuilder {
     private final VkApiClient vkApiClient;
     private final Random random;
     //токен
-    private static final String ACCESS_TOKEN = "d898da7492c166b963dcf1350ee42f5182c088a91a96703e535fd3cec50a8e69f37bab9ee6844aaceb7fb";
+    private static final String ACCESS_TOKEN = "4a0fbc7bd95b8c06f2176bee7e90ca6be26fedbefdacb313b480aabd0c38dca4c75122be28f85e7a5c6bc";
     private static final String SECRET_KEY = "govorun17";
 
     /**
@@ -29,7 +29,7 @@ public class VkApiResponseBuilder {
     public VkApiResponseBuilder() {
         this.random = new Random();
         this.vkApiClient = new VkApiClient(new HttpTransportClient());
-        log.info("!!!VK API VERSION" + vkApiClient.getVersion() + "!!!");
+        log.info("!!!VK API VERSION " + vkApiClient.getVersion() + "!!!");
     }
 
     private String getPrefixUrl() {
