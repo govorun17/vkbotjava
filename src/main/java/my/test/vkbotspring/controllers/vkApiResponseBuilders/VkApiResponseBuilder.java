@@ -14,11 +14,13 @@ import java.util.Random;
 public class VkApiResponseBuilder {
     //методы vk api
     private static final String SEND_MESSAGES = "messages.send?";
+    private static final String GROUP_CONFIRMATION_CODE = "groups.getCallbackConfirmationCode?";
     //vk api
     private final VkApiClient vkApiClient;
     private final Random random;
     //токен
-    private final String accessToken = "d898da7492c166b963dcf1350ee42f5182c088a91a96703e535fd3cec50a8e69f37bab9ee6844aaceb7fb";
+    private static final String ACCESS_TOKEN = "d898da7492c166b963dcf1350ee42f5182c088a91a96703e535fd3cec50a8e69f37bab9ee6844aaceb7fb";
+    private static final String SECRET_KEY = "govorun17";
 
     /**
      * Конструктор - инициализирует поля
@@ -37,11 +39,23 @@ public class VkApiResponseBuilder {
         return vkApiClient.getVersion();
     }
     private String getToken() {
-        return "access_token=" + this.accessToken;
+        return "access_token=" + ACCESS_TOKEN;
+    }
+    private String getPostfix() {
+        return this.getToken() + "&v=" + this.getVersion();
     }
 
     /**
-     * Билдит ответ-сообщение
+     * Проверка сообщения сервера
+     * @param anyKey ключ, пришедший с запросом
+     * @return boolean
+     */
+    public Boolean checkSecretKey(String anyKey) {
+        return anyKey.equals(SECRET_KEY);
+    }
+
+    /**
+     * Создает ответ-сообщение
      * @param message сообщение, которое увидит пользователь
      * @param userId ID пользователя - искать в Json с пришедшим запросом
      * @return возвращает строку с url для апи
@@ -51,7 +65,17 @@ public class VkApiResponseBuilder {
                 + "user_id=" + userId
                 + "&message=" + message
                 + "&random_id=" + random.nextInt()
-                + "&" + this.getToken();
+                + "&" + this.getPostfix();
     }
 
+    /**
+     * Создает запрос-подтверждение ссылки
+     * @param groupId id группы
+     * @return String
+     */
+    public String buildRequestConfirming(String groupId) {
+        return this.getPrefixUrl() + GROUP_CONFIRMATION_CODE
+                + "group_id=" + groupId
+                + "&" + this.getPostfix();
+    }
 }
