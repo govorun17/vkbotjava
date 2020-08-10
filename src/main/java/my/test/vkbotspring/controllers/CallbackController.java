@@ -56,7 +56,7 @@ public class CallbackController {
                         String url = service.confirmUrl(incMessObject.get("group_id").getAsString());
                         String key = service.getSecurityKey(url);
                         log.info(key);
-                        return "3bf173bb";
+                        return key;
                     }
                     case "message_new": {
 
