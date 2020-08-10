@@ -1,8 +1,10 @@
-package my.test.vkbotspring.controllers.vkApiResponseBuilders;
+package my.test.vkbotspring.Builders;
 
 import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.Random;
 
@@ -11,17 +13,23 @@ import java.util.Random;
  * @author govorun17
  */
 @Slf4j
+@Component
 public class VkApiResponseBuilder {
-    //методы vk api
-    private static final String SEND_MESSAGES = "messages.send?";
-    private static final String GROUP_CONFIRMATION_CODE = "groups.getCallbackConfirmationCode?";
     //vk api
     private final VkApiClient vkApiClient;
     private final Random random;
-    //токен
-    private static final String ACCESS_TOKEN = "4a0fbc7bd95b8c06f2176bee7e90ca6be26fedbefdacb313b480aabd0c38dca4c75122be28f85e7a5c6bc";
-    private static final String SECRET_KEY = "govorun17";
-
+    //методы vk api
+    @Value("${SEND_MESSAGES}")
+    private String SEND_MESSAGES;
+    @Value("${GROUP_CONFIRMATION_CODE}")
+    private String GROUP_CONFIRMATION_CODE;
+    //настройки юзера
+    @Value("${ACCESS_TOKEN}")
+    private String ACCESS_TOKEN;
+    @Value("${SECRET_KEY}")
+    private String SECRET_KEY;
+    @Value("${GROUP_KEY}")
+    private String GROUP_KEY;
     /**
      * Конструктор - инициализирует поля
      * Логирует версию апи (мавен не подтягивает последнюю, если крашится надо указать вручную в билдерах)
@@ -44,6 +52,9 @@ public class VkApiResponseBuilder {
     private String getPostfix() {
         return this.getToken() + "&v=" + this.getVersion();
     }
+    public String getGROUP_KEY() {
+        return GROUP_KEY;
+    }
 
     /**
      * Проверка сообщения сервера
@@ -51,7 +62,10 @@ public class VkApiResponseBuilder {
      * @return boolean
      */
     public Boolean checkSecretKey(String anyKey) {
-        return anyKey.equals(SECRET_KEY);
+        if (anyKey == null)
+            return SECRET_KEY.equals("null");
+        else
+            return anyKey.equals(SECRET_KEY);
     }
 
     /**

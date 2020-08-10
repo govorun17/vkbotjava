@@ -4,33 +4,32 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
-import my.test.vkbotspring.services.Service;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
+import my.test.vkbotspring.services.VkApiService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 @RestController
 @Slf4j
 public class CallbackController {
 
-    private final Service service = new Service();
+    private final VkApiService vkApiService;
+
+    @Autowired
+    public CallbackController(VkApiService vkApiService) {
+        this.vkApiService = vkApiService;
+    }
+
+//todo: измениить создание ссылок через URI
 
     @PostMapping(value = "/callback", consumes = {"application/json"})
     @ResponseBody
-    public String callback(@RequestBody String incomeMess) {
+    public String callback(@RequestBody String incomeMessage) {
         log.info("!!!Controller!!!");
-
-        if(incomeMess != null) {
+        if(incomeMessage != null) {
             Gson gson = new Gson();
-            JsonObject incMessObject = gson.fromJson(incomeMess, JsonObject.class);
+            JsonObject incMessObject = gson.fromJson(incomeMessage, JsonObject.class);
             JsonElement secret = incMessObject.get("secret");
-            if (secret != null && secret.getAsString().equals("govorun17")) {
+            if (vkApiService.checkSecretKey(secret)) {
 
                 switch (incMessObject.get("type").getAsString()) {
                     /**
@@ -49,18 +48,19 @@ public class CallbackController {
                      *  }
                      * }
                      * парсим - вытягиваем ключ, возвращаем VK Api
-                     * @return КЛЮЧ полученый с url Service
-                     * @see Service#confirmUrl(String)
+                     * @return КЛЮЧ полученый с url VkApiService
+                     * @see VkApiService#confirmUrl(String)
                      */
                     case "confirmation": {
-                        String url = service.confirmUrl(incMessObject.get("group_id").getAsString());
-                        String key = service.getSecurityKey(url);
+                        String url = vkApiService.confirmUrl(incMessObject.get("group_id").getAsString());
+                        String key = vkApiService.getSecurityKey(url);
                         log.info(key);
                         return key;
                     }
                     case "message_new": {
-
-                        break;
+                        String answer = vkApiService.sendMessage(incMessObject.getAsJsonObject("object"));
+                        log.info(answer);
+                        return answer;
                     }
 
                 }
