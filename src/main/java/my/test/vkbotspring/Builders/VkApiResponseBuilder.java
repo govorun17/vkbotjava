@@ -6,7 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Random;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -35,7 +37,6 @@ public class VkApiResponseBuilder {
      * Логирует версию апи (мавен не подтягивает последнюю, если крашится надо указать вручную в билдерах)
      */
     public VkApiResponseBuilder() {
-        this.random = new Random();
         this.vkApiClient = new VkApiClient(new HttpTransportClient());
         log.info("!!!VK API VERSION " + vkApiClient.getVersion() + "!!!");
     }
@@ -75,11 +76,17 @@ public class VkApiResponseBuilder {
      * @return возвращает строку с url для апи
      */
     public String buildResponseMessage(String userId, String message) {
-        return this.getPrefixUrl() + SEND_MESSAGES
-                + "user_id=" + userId
-                + "&message=" + message
-                + "&random_id=" + ThreadLocalRandom.current().nextLong(Integer.MAX_VALUE, Long.MAX_VALUE)
-                + "&" + this.getPostfix();
+        try {
+            return this.getPrefixUrl() + SEND_MESSAGES
+                    + "user_id=" + userId
+                    + "&message=" + URLEncoder.encode(message, StandardCharsets.UTF_8.toString())
+                    + "&random_id=" + ThreadLocalRandom.current().nextLong(Integer.MAX_VALUE, Long.MAX_VALUE)
+                    + "&" + this.getPostfix();
+        }
+        catch (UnsupportedEncodingException e) {
+            log.error(e.getMessage());
+            return null;
+        }
     }
 
     /**

@@ -92,20 +92,19 @@ public class VkApiService {
         String userId = message.get("from_id").getAsString();
         String userMessage = message.get("text").getAsString();
         log.info(userMessage);
-        String url = vkApiResponseBuilder.buildResponseMessage(userId, "Вы написали: " + userMessage).replace(" ", "+");
-
-        Gson gson = new Gson();
-        HttpClient httpClient = HttpClientBuilder.create().build();
-        HttpGet httpGet = new HttpGet(url);
+        String url = vkApiResponseBuilder.buildResponseMessage(userId, "Вы написали: " + userMessage);
 
         try {
+            Gson gson = new Gson();
+            HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpGet httpGet = new HttpGet(url);
             HttpResponse httpResponse = httpClient.execute(httpGet);
             BufferedReader content = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent()));
             String output = content.readLine();
             JsonObject outputObject = gson.fromJson(output, JsonObject.class);
             return outputObject.get("response").getAsString();
         }
-        catch (IOException e) {
+        catch (Exception e) {
             log.error(e.getMessage());
             return "ERROR!!!";
         }
