@@ -42,25 +42,17 @@ public class VkApiService {
     }
 
     /**
-     * Возвращает ссылку для получения ключа подтверждения по ключу круппы
+     * Депарсит полученый джсон в поиске ключа или ошибки
      * @param groupKey id группы
-     * @return String URL
+     * @return ключ доступа
      */
-    public String confirmUrl(String groupKey) {
+    public String getSecurityKey(String groupKey) {
+        if (!vkApiResponseBuilder.getGROUP_KEY().toLowerCase().equals("null"))
+            return vkApiResponseBuilder.getGROUP_KEY();
+
         log.info("!!!confirming Url!!!");
         String url = vkApiResponseBuilder.buildRequestConfirming(groupKey);
         log.info(url);
-        return url;
-    }
-
-    /**
-     * Депарсит полученый джсон в поиске ключа или ошибки
-     * @param url ссылка на получение ключа доступа
-     * @return ключ доступа
-     */
-    public String getSecurityKey(String url) {
-        if (!vkApiResponseBuilder.getGROUP_KEY().toLowerCase().equals("null"))
-            return vkApiResponseBuilder.getGROUP_KEY();
 
         Gson gson = new Gson();
         HttpClient httpClient = HttpClientBuilder.create().build();
@@ -96,8 +88,10 @@ public class VkApiService {
      * @return id сообщения
      */
     public String sendMessage(JsonObject message) {
+        log.info("Sending message...");
         String userId = message.get("from_id").getAsString();
         String userMessage = message.get("text").getAsString();
+        log.info(userMessage);
         String url = vkApiResponseBuilder.buildResponseMessage(userId, "Вы написали: " + userMessage).replace(" ", "+");
 
         Gson gson = new Gson();

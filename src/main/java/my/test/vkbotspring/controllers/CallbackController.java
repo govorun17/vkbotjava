@@ -19,64 +19,55 @@ public class CallbackController {
         this.vkApiService = vkApiService;
     }
 
-//todo: измениить создание ссылок через URI
 
     @PostMapping(value = "/callback", consumes = {"application/json"})
     @ResponseBody
     public String callback(@RequestBody String incomeMessage) {
         log.info("!!!Controller!!!");
-        if(incomeMessage != null) {
-            Gson gson = new Gson();
-            JsonObject incMessObject = gson.fromJson(incomeMessage, JsonObject.class);
-            JsonElement secret = incMessObject.get("secret");
-            if (vkApiService.checkSecretKey(secret)) {
-
-                switch (incMessObject.get("type").getAsString()) {
-                    /**
-                     * кейс подтверждения сервера
-                     * Для получения уведомлений нужно подтвердить адрес сервера.
-                     * На него будет отправлен POST-запрос, содержащий JSON:
-                     * {
-                     *  "type": "confirmation",
-                     *  "group_id": ***********
-                     * }
-                     * Парсим group_id и запрашиваем ссылку
-                     * Get запрос возвращает ключ-подтверждение
-                     * {
-                     *  "response": {
-                     *      "code": "********"
-                     *  }
-                     * }
-                     * парсим - вытягиваем ключ, возвращаем VK Api
-                     * @return КЛЮЧ полученый с url VkApiService
-                     * @see VkApiService#confirmUrl(String)
-                     */
-                    case "confirmation": {
-                        String url = vkApiService.confirmUrl(incMessObject.get("group_id").getAsString());
-                        String key = vkApiService.getSecurityKey(url);
-                        log.info(key);
-                        return key;
-                    }
-                    case "message_new": {
-                        String answer = vkApiService.sendMessage(incMessObject.getAsJsonObject("object"));
-                        log.info(answer);
-                        return answer;
-                    }
-
-                }
-            }
-            else {
-                log.warn("!!!Wrong secret key!!!");
-                return "Wrong secret key";
-            }
-        }
-        else {
+        if (incomeMessage == null) {
             log.warn("!!!NULL message!!!");
-            return "NULL message";
         }
 
+        Gson gson = new Gson();
+        JsonObject incMessObject = gson.fromJson(incomeMessage, JsonObject.class);
+        JsonElement secret = incMessObject.get("secret");
+        if (!vkApiService.checkSecretKey(secret)) {
+            log.warn("!!!Wrong secret key!!!");
+        }
+        log.info(incMessObject.get("type").getAsString());
+        switch (incMessObject.get("type").getAsString()) {
+            /**
+             * кейс подтверждения сервера
+             * Для получения уведомлений нужно подтвердить адрес сервера.
+             * На него будет отправлен POST-запрос, содержащий JSON:
+             * {
+             *  "type": "confirmation",
+             *  "group_id": ***********
+             * }
+             * Парсим group_id и запрашиваем ссылку
+             * Get запрос возвращает ключ-подтверждение
+             * {
+             *  "response": {
+             *      "code": "********"
+             *  }
+             * }
+             * парсим - вытягиваем ключ, возвращаем VK Api
+             * @return КЛЮЧ полученый с url VkApiService
+             * @see VkApiService#confirmUrl(String)
+             */
+            case "confirmation": {
+                String key = vkApiService.getSecurityKey(incMessObject.get("group_id").getAsString());
+                log.info(key);
+                return key;
+            }
+            case "message_new": {
+                String answer = vkApiService.sendMessage(incMessObject.getAsJsonObject("object"));
+                log.info(answer);
+            }
+
+        }
         log.info("!!!Controller OK!!!");
-        return "OK!";
+        return "ok";
     }
 
     @GetMapping("/testconnection")

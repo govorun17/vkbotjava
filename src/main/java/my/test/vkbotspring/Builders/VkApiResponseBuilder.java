@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Билдер для ответов вк апи
@@ -17,7 +18,6 @@ import java.util.Random;
 public class VkApiResponseBuilder {
     //vk api
     private final VkApiClient vkApiClient;
-    private final Random random;
     //методы vk api
     @Value("${SEND_MESSAGES}")
     private String SEND_MESSAGES;
@@ -67,7 +67,7 @@ public class VkApiResponseBuilder {
         else
             return anyKey.equals(SECRET_KEY);
     }
-
+//todo: измениить создание ссылок через URI
     /**
      * Создает ответ-сообщение
      * @param message сообщение, которое увидит пользователь
@@ -78,7 +78,7 @@ public class VkApiResponseBuilder {
         return this.getPrefixUrl() + SEND_MESSAGES
                 + "user_id=" + userId
                 + "&message=" + message
-                + "&random_id=" + random.nextInt()
+                + "&random_id=" + ThreadLocalRandom.current().nextLong(Integer.MAX_VALUE, Long.MAX_VALUE)
                 + "&" + this.getPostfix();
     }
 
