@@ -1,14 +1,9 @@
 package my.test.vkbotspring.Builders;
 
-import com.vk.api.sdk.client.VkApiClient;
-import com.vk.api.sdk.httpclient.HttpTransportClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -19,7 +14,10 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 public class VkApiResponseBuilder {
     //vk api
-    private final VkApiClient vkApiClient;
+    @Value("${API_VERSION}")
+    private String API_VERSION;
+    @Value("${PREFIX_URL}")
+    private String PREFIX_URL;
     //методы vk api
     @Value("${SEND_MESSAGES}")
     private String SEND_MESSAGES;
@@ -37,15 +35,14 @@ public class VkApiResponseBuilder {
      * Логирует версию апи (мавен не подтягивает последнюю, если крашится надо указать вручную в билдерах)
      */
     public VkApiResponseBuilder() {
-        this.vkApiClient = new VkApiClient(new HttpTransportClient());
-        log.info("!!!VK API VERSION " + vkApiClient.getVersion() + "!!!");
+        log.info("!!!VK API VERSION " + API_VERSION + "!!!");
     }
 
     private String getPrefixUrl() {
-        return vkApiClient.getApiEndpoint();
+        return PREFIX_URL;
     }
     private String getVersion() {
-        return vkApiClient.getVersion();
+        return API_VERSION;
     }
     private String getToken() {
         return "access_token=" + ACCESS_TOKEN;
@@ -68,7 +65,7 @@ public class VkApiResponseBuilder {
         else
             return anyKey.equals(SECRET_KEY);
     }
-//todo: измениить создание ссылок через URI
+
     /**
      * Создает ответ-сообщение
      * @param message сообщение, которое увидит пользователь
@@ -76,17 +73,12 @@ public class VkApiResponseBuilder {
      * @return возвращает строку с url для апи
      */
     public String buildResponseMessage(String userId, String message) {
-        try {
-            return this.getPrefixUrl() + SEND_MESSAGES
-                    + "user_id=" + userId
-                    + "&message=" + URLEncoder.encode(message, StandardCharsets.UTF_8.toString())
-                    + "&random_id=" + ThreadLocalRandom.current().nextLong(Integer.MAX_VALUE, Long.MAX_VALUE)
-                    + "&" + this.getPostfix();
-        }
-        catch (UnsupportedEncodingException e) {
-            log.error(e.getMessage());
-            return null;
-        }
+        return this.getPrefixUrl() + SEND_MESSAGES
+                + "user_id=" + userId
+                + "&message=" + message
+                + "&random_id=" + ThreadLocalRandom.current().nextLong(Integer.MAX_VALUE, Long.MAX_VALUE)
+                + "&" + this.getPostfix();
+
     }
 
     /**

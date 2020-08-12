@@ -1,48 +1,47 @@
 package my.test.vkbotspring.controllers;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import my.test.vkbotspring.DTO.JsonObjectDTO;
 import my.test.vkbotspring.services.VkApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @Slf4j
 public class CallbackController {
 
     private final VkApiService vkApiService;
+    private final Gson gson;
 
     @Autowired
     public CallbackController(VkApiService vkApiService) {
         this.vkApiService = vkApiService;
+        this.gson = new Gson();
     }
 
-
     @PostMapping(value = "/callback", consumes = {"application/json"})
-    @ResponseBody
-    public String callback(@RequestBody String incomeMessage) {
+    public String callback(@RequestBody JsonObjectDTO incomeMessage) {
         log.info("!!!Controller!!!");
         if (incomeMessage == null) {
             log.warn("!!!NULL message!!!");
+            return "ok";
         }
 
-        Gson gson = new Gson();
-        JsonObject incMessObject = gson.fromJson(incomeMessage, JsonObject.class);
-        JsonElement secret = incMessObject.get("secret");
-        if (!vkApiService.checkSecretKey(secret)) {
+        if (!vkApiService.checkSecretKey(incomeMessage.getSecret())) {
             log.warn("!!!Wrong secret key!!!");
         }
-        log.info(incMessObject.get("type").getAsString());
-        switch (incMessObject.get("type").getAsString()) {
+        log.info(incomeMessage.getType());
+        switch (incomeMessage.getType()) {
             /**
              * кейс подтверждения сервера
              * Для получения уведомлений нужно подтвердить адрес сервера.
              * На него будет отправлен POST-запрос, содержащий JSON:
              * {
              *  "type": "confirmation",
-             *  "group_id": ***********
+             *  "group_id": ***********,
+             *  "secret": ********
              * }
              * Парсим group_id и запрашиваем ссылку
              * Get запрос возвращает ключ-подтверждение
@@ -56,12 +55,13 @@ public class CallbackController {
              * @see VkApiService#confirmUrl(String)
              */
             case "confirmation": {
-                String key = vkApiService.getSecurityKey(incMessObject.get("group_id").getAsString());
+                String key = vkApiService.getSecurityKey(incomeMessage.getGroupId());
                 log.info(key);
                 return key;
             }
             case "message_new": {
-                String answer = vkApiService.sendMessage(incMessObject.getAsJsonObject("object"));
+                String answer =
+                        vkApiService.sendMessage(incomeMessage.getObject().toString());
                 log.info(answer);
             }
 

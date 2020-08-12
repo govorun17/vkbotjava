@@ -1,20 +1,16 @@
 package my.test.vkbotspring.services;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import my.test.vkbotspring.Builders.VkApiResponseBuilder;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
+import my.test.vkbotspring.DTO.ConfCodeDTO;
+import my.test.vkbotspring.DTO.NewMessageDTO;
+import my.test.vkbotspring.DTO.ResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 
 @Slf4j
@@ -34,9 +30,9 @@ public class VkApiService {
      * @return boolean
      * @see VkApiResponseBuilder#checkSecretKey(String) 
      */    
-    public Boolean checkSecretKey(JsonElement anyKey) {
+    public Boolean checkSecretKey(String anyKey) {
         if (anyKey != null)
-            return vkApiResponseBuilder.checkSecretKey(anyKey.getAsString());
+            return vkApiResponseBuilder.checkSecretKey(anyKey);
         else
             return vkApiResponseBuilder.checkSecretKey(null);
     }
@@ -54,59 +50,48 @@ public class VkApiService {
         String url = vkApiResponseBuilder.buildRequestConfirming(groupKey);
         log.info(url);
 
-        Gson gson = new Gson();
-        HttpClient httpClient = HttpClientBuilder.create().build();
-        HttpGet httpGet = new HttpGet(url);
-
-        try {
-            HttpResponse httpResponse = httpClient.execute(httpGet);
-            BufferedReader content = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent()));
-            String output = content.readLine();
-            JsonObject outputObject = gson.fromJson(output, JsonObject.class);
-            JsonObject responseObject = outputObject.getAsJsonObject("response");
-
-            if (responseObject != null) {
-                return responseObject.get("code").getAsString();
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseDTO response = restTemplate.getForObject(url, ResponseDTO.class);
+        if(response != null && response.getResponse() != null){
+            ConfCodeDTO codeDTO;
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                codeDTO = objectMapper.readValue(response.getResponse().toString(), ConfCodeDTO.class);
             }
-            else {
-                responseObject = outputObject.getAsJsonObject("error");
-                String errorMess = responseObject.get("err_mess").getAsString();
-                log.error(errorMess);
-                return errorMess;
+            catch (IOException e) {
+                log.error(e.getMessage());
+                return "ERROR";
             }
+            return codeDTO.getCode();
         }
-
-        catch (IOException e) {
-            log.error(e.getMessage());
-            return "ERROR!!!";
-        }
+        return "NO RESPONSE";
     }
 
     /**
      * Отправляет сообщение
-     * @param message JsonObject вытянутый "Object"
+     * @param obj JsonObject вытянутый "Object"
      * @return id сообщения
      */
-    public String sendMessage(JsonObject message) {
+    public String sendMessage(String obj) {
         log.info("Sending message...");
-        String userId = message.get("from_id").getAsString();
-        String userMessage = message.get("text").getAsString();
-        log.info(userMessage);
-        String url = vkApiResponseBuilder.buildResponseMessage(userId, "Вы написали: " + userMessage);
-
+        NewMessageDTO messageDTO;
         try {
-            Gson gson = new Gson();
-            HttpClient httpClient = HttpClientBuilder.create().build();
-            HttpGet httpGet = new HttpGet(url);
-            HttpResponse httpResponse = httpClient.execute(httpGet);
-            BufferedReader content = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent()));
-            String output = content.readLine();
-            JsonObject outputObject = gson.fromJson(output, JsonObject.class);
-            return outputObject.get("response").getAsString();
+            ObjectMapper objectMapper = new ObjectMapper();
+            messageDTO = objectMapper.readValue(obj, NewMessageDTO.class);
         }
-        catch (Exception e) {
+        catch (IOException e) {
             log.error(e.getMessage());
-            return "ERROR!!!";
+            return "ERROR";
         }
+
+        log.info(messageDTO.getText());
+        String url = vkApiResponseBuilder.buildResponseMessage(messageDTO.getFromId().toString(), "Вы написали: " + messageDTO.getText());
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseDTO response = restTemplate.getForObject(url, ResponseDTO.class);
+        if(response != null && response.getResponse() != null){
+            return response.getResponse().toString();
+        }
+        return "NO RESPONSE";
     }
 }

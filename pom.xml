@@ -16,7 +16,6 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		<vk-api.version>1.0.6</vk-api.version>
 	</properties>
 
 	<dependencies>
@@ -40,13 +39,11 @@
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 		</dependency>
-
 		<dependency>
-			<groupId>com.vk.api</groupId>
-			<artifactId>sdk</artifactId>
-			<version>${vk-api.version}</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.12</version>
 		</dependency>
-
 	</dependencies>
 
 	<build>
